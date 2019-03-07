@@ -2,31 +2,38 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
 
-login = open("data.txt", "r")
-data = login.read().strip().split("\n")
-user_, pass_ = data[0:2]
-classes = data[2:]
+from utclassobj import UTClass
 
-driver = webdriver.Firefox()
+import time
+from getpass import getpass
+
+
+login = open("data.txt", "r")
+classes = [clazz.strip() for clazz in login.read().strip().split("\n")]
+
+opts = Options()
+opts.headless = True
+driver = webdriver.Firefox(options=opts)
 
 driver.get("https://utdirect.utexas.edu/apps/registrar/course_schedule/20192")
 
 
-def login():
+def login(un, pw):
     """
     Login sequence
     """
 
     if driver.title == "UT EID Login":
-        username = driver.find_element_by_xpath("//input[@id='IDToken1']")
-        password = driver.find_element_by_xpath("//input[@id='IDToken2']")
-        loginbutton = driver.find_element_by_xpath("//input[@name='Login.Submit']")
+        userN = driver.find_element_by_xpath("//input[@id='IDToken1']")
+        passW = driver.find_element_by_xpath("//input[@id='IDToken2']")
+        loginButton = driver.find_element_by_xpath("//input[@name='Login.Submit']")
 
-        username.send_keys(user_)
-        password.send_keys(pass_)
-        loginbutton.click()
+        userN.send_keys(un)
+        passW.send_keys(pw)
+        loginButton.click()
 
 
 def createClasses():
@@ -56,16 +63,35 @@ def createClasses():
 
 
 def instantiateClass():
+    """
+    Instantiates a given section of a class
+    """
     sections = []
 
     # Waits until the sections have loaded
-    classSections = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//tbody/tr/td/a")))
+    classSections = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//tbody/tr")))[1:]
     for section in classSections:
-        sections.append(section.text)
+        unique = section.find_element_by_xpath(".//td[@data-th='Unique']/a").text
+
+        days = section.find_elements_by_xpath(".//td[@data-th='Days']/span")
+        hours = section.find_elements_by_xpath(".//td[@data-th='Hour']/span")
+        times = [[elem.text for elem in days], [elem.text for elem in hours]]
+
+        room = section.find_element_by_xpath(".//td[@data-th='Room']/span").text
+
+        prof = section.find_element_by_xpath(".//td[@data-th='Instructor']").text
+
+        status = section.find_element_by_xpath(".//td[@data-th='Status']").text
+
+        # newSection = UTClass(unique, time, room, prof, status)
+        sections.append([unique, times, room, prof, status])
     driver.back()
     return sections
 
 
 if __name__ == "__main__":
-    login()
+    username = input("Enter your username: ")
+    password = getpass(prompt="Enter your password: ")
+    print("Loading Classes...")
+    login(username, password)
     print(createClasses())
