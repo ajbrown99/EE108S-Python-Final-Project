@@ -45,7 +45,7 @@ class UTClass:
 
     def __str__(self):
         return "Unique Number: " + self.unique + "\n"\
-              + "Class Times: " + str(self.times) + "\n"\
+              + "Class Times: " + str(self.parseTime()) + "\n"\
               + "Room: " + self.room + "\n"\
               + "Instructor: " + self.prof + "\n"\
               + "Status: " + self.status + "\n"
