@@ -61,7 +61,7 @@ def createClasses():
 
         # Find the department you are looking for
         for option in deptSelect.options:
-            if department in option.text:
+            if department == option.text.split("-")[0].strip():
                 deptSelect.select_by_visible_text(option.text)
                 courseNumber.send_keys(number)
                 submit.click()
@@ -81,20 +81,25 @@ def instantiateClass():
 
     for section in classSections:
 
-        unique = section.find_element_by_xpath(".//td[@data-th='Unique']/a").text
+        try:
+            unique = section.find_element_by_xpath(".//td[@data-th='Unique']/a").text
 
-        days = section.find_elements_by_xpath(".//td[@data-th='Days']/span")
-        hours = section.find_elements_by_xpath(".//td[@data-th='Hour']/span")
-        times = [[elem.text for elem in days], [elem.text for elem in hours]]
+            days = section.find_elements_by_xpath(".//td[@data-th='Days']/span")
+            hours = section.find_elements_by_xpath(".//td[@data-th='Hour']/span")
+            times = [[elem.text for elem in days], [elem.text for elem in hours]]
 
-        room = section.find_element_by_xpath(".//td[@data-th='Room']/span").text
+            room = section.find_element_by_xpath(".//td[@data-th='Room']/span").text
 
-        prof = section.find_element_by_xpath(".//td[@data-th='Instructor']").text
+            prof = section.find_element_by_xpath(".//td[@data-th='Instructor']").text
 
-        status = section.find_element_by_xpath(".//td[@data-th='Status']").text
+            status = section.find_element_by_xpath(".//td[@data-th='Status']").text
 
-        newSection = UTClass(unique, times, room, prof, status)
-        sections.append(newSection)
+            newSection = UTClass(unique, times, room, prof, status)
+            sections.append(newSection)
+        except:
+            continue
+
+
 
     driver.back()
     return sections
