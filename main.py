@@ -5,6 +5,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
 
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+
 from utclassobj import UTClass
 
 import time
@@ -44,7 +46,7 @@ def createClasses():
     for c in classes:
 
         # Waits until page loaded to retrieve dropdown
-        dropDown = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//select[@id='fos_cn']")))
+        dropDown = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//select[@id='fos_cn']")))
         deptSelect = Select(dropDown)
 
         # Input for course number
@@ -65,19 +67,26 @@ def createClasses():
                 deptSelect.select_by_visible_text(option.text)
                 courseNumber.send_keys(number)
                 submit.click()
-                classList.append(instantiateClass())
+                classSectionObject = instantiateClass(department + number)
+                if classSectionObject:
+                    classList.append(classSectionObject)
                 break
     return classList
 
 
-def instantiateClass():
+def instantiateClass(classNameNumber):
     """
-    Instantiates a given section of a class
+    Instantiates all sections of a given class
     """
     sections = []
 
     # Waits until the sections have loaded
-    classSections = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//tbody/tr")))[1:]
+    try:
+        classSections = WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located((By.XPATH, "//tbody/tr")))[1:]
+    except (TimeoutException, NoSuchElementException):
+        print("No sections available for " + classNameNumber + ".\n")
+        driver.back()
+        return
 
     for section in classSections:
 
@@ -96,7 +105,7 @@ def instantiateClass():
 
             newSection = UTClass(unique, times, room, prof, status)
             sections.append(newSection)
-        except:
+        except (TimeoutException, NoSuchElementException):
             continue
 
 
