@@ -1,5 +1,6 @@
 class UTClass:
-    def __init__(self, unique, times, room, prof, status):
+    def __init__(self, name, unique, times, room, prof, status):
+        self.name = name
         self.unique = unique
         self.times = times
         self.room = room
@@ -7,9 +8,28 @@ class UTClass:
         self.status = status
 
     def findConflict(self, otherClass):
-        pass
+        """
+        Compares the given class with this class and see if there is a schedule conflict.
+        """
+
+        if self.name == otherClass.name:
+            print("Can't take two of the same class.")
+            return True
+
+        parsedTime = self.parseTime()
+        otherParsedTime = otherClass.parseTime()
+
+        for i in parsedTime:
+            for j in otherParsedTime:
+                if i[0] == j[0] and (min(i[1][1], j[1][1]) - max(i[1][0], j[1][0]) > 0):
+                    return True
+        return False
 
     def parseTime(self):
+        """
+        Parses the raw string representing class time and put it into a simpler format to calculate with
+        """
+
         days = self.times[0]
         hour = self.times[1]
 
@@ -44,7 +64,12 @@ class UTClass:
         return classSchedule
 
     def __str__(self):
-        return "Unique Number: " + self.unique + "\n"\
+        """
+        String representation of a UT class.
+        """
+
+        return "Name: " + self.name + "\n"\
+              + "Unique Number: " + self.unique + "\n"\
               + "Class Times: " + str(self.parseTime()) + "\n"\
               + "Room: " + self.room + "\n"\
               + "Instructor: " + self.prof + "\n"\
