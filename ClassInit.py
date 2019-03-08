@@ -7,10 +7,12 @@ from selenium.webdriver.firefox.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 from ClassObj import UTClass
+import time
 
 
 class ClassGetter:
     def __init__(self):
+        # t = time.time()
         login = open("data.txt", "r")
         self.classes = [clazz.strip() for clazz in login.read().strip().split("\n")]
 
@@ -19,6 +21,7 @@ class ClassGetter:
         self.driver = webdriver.Firefox(options=opts)
 
         self.driver.get("https://utdirect.utexas.edu/apps/registrar/course_schedule/20192")
+        # print(t - time.time())
 
     def login(self, un, pw):
         """
@@ -33,6 +36,10 @@ class ClassGetter:
             userN.send_keys(un)
             passW.send_keys(pw)
             loginButton.click()
+
+        # If remains on same page, that means you did not login successfully
+        if self.driver.title == "UT EID Login":
+            raise Exception
 
     def createClasses(self):
         """
@@ -77,17 +84,17 @@ class ClassGetter:
         sections = []
 
         # Waits until the sections have loaded
-        try:
-            classSections = WebDriverWait(self.driver, 5).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//tbody/tr")))[1:]
-        except (TimeoutException, NoSuchElementException):
+        mainBody = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, "//main[@id='inner_body']")))
+        if mainBody.find_element_by_xpath(".//div").get_attribute("class") == "error":
             print("No sections available for " + classNameNumber + ".\n")
             self.driver.back()
             return
 
+        classSections = self.driver.find_elements_by_xpath("//tbody/tr")[1:]
+
         for section in classSections:
 
-            try:
+            if section.find_element_by_xpath(".//td").get_attribute("class") != "course_header":
                 unique = section.find_element_by_xpath(".//td[@data-th='Unique']/a").text
 
                 days = section.find_elements_by_xpath(".//td[@data-th='Days']/span")
@@ -102,8 +109,6 @@ class ClassGetter:
 
                 newSection = UTClass(classNameNumber, unique, times, room, prof, status)
                 sections.append(newSection)
-            except (TimeoutException, NoSuchElementException):
-                continue
 
         self.driver.back()
         return sections
