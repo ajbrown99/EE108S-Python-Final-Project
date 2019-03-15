@@ -45,7 +45,7 @@ class ClassGetter:
         """
         Takes the user specified classes and instantiates them as objects.
         """
-        classList = []
+        classList = {}
         for c in self.classes:
 
             # Waits until page loaded to retrieve dropdown
@@ -73,7 +73,7 @@ class ClassGetter:
                     submit.click()
                     classSectionObject = self.instantiateClass(department + " " + number)
                     if classSectionObject:
-                        classList.append(classSectionObject)
+                        classList.update(classSectionObject)
                     break
         return classList
 
@@ -81,7 +81,7 @@ class ClassGetter:
         """
         Instantiates all sections of a given class
         """
-        sections = []
+        sections = {}
 
         # Waits until the sections have loaded
         mainBody = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, "//main[@id='inner_body']")))
@@ -108,7 +108,7 @@ class ClassGetter:
                 status = section.find_element_by_xpath(".//td[@data-th='Status']").text
 
                 newSection = UTClass(classNameNumber, unique, times, room, prof, status)
-                sections.append(newSection)
+                sections[unique] = newSection
 
         self.driver.back()
         return sections
